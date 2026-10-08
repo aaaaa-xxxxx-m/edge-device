@@ -29,6 +29,7 @@ def run_showip(port: int = 8080) -> None:
         if screen is None:
             try:
                 pygame.display.init()
+                pygame.font.init()
                 screen = pygame.display.set_mode((0, 0), pygame.FULLSCREEN)
                 pygame.mouse.set_visible(False)
             except Exception as e:  # noqa: BLE001

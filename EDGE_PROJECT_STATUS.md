@@ -180,10 +180,11 @@ edge-device/
 - **配置**：`/opt/bee-edge/config.toml`（`device_name=hive001` + 真实 key；`alsa_device=plughw:1,0` 对应 USB 麦克风 card1）。
 - **服务**：`bee-edge`、`bee-display` 均已安装并 **enable**；`bee-edge` 运行正常（一轮 ≈19–20s CPU + 休眠 90s；启动导入 scipy/sklearn ≈25s 一次性）。
 - **验证**：采集→特征→预签名上传音频+特征成功（服务器 hive001 占用 `audio 10→12`、`features 0→2`）；无模型时状态「等待模型」。同时修复云端 `GET /models/public-key` 被 `/{version}` 遮蔽的 404（提交 `0ccfe5e7`）。
-- **待办**：
-  - DHT22：驱动已可用，当前读数 `(null)`（未接/接线/引脚），接好 GPIO11 即出温湿度（已容错不阻塞）。
-  - 显示：需接 HDMI 并重启（进控制台）后 `bee-display` 才有画面；左上角显示 `主机名·IP`。
-  - 模型：需在网页端触发一次「更新检测模型」→ 设备转采集模式（30s）→ 攒满 600 → 云端出模型 → 设备自动拉取验签替换。
+- **修复 / 进展（2026-10-09）**：
+  - 显示：`bee-display` 曾因**缺少 `pygame.font.init()`** 崩溃重启（屏幕停在控制台登录提示）；修复后稳定运行于 HDMI **1280×800**（顶部设备名、左上角 `主机名·IP`）。
+  - 模型：以桌面 `queenbee`（600 正样本）**模拟训练**出 `v20261008175642`；设备开机后**已自动拉取 → Ed25519 验签 → 原子替换**，并开始推理上报（state：`概率 0.73 / 显著波动 / model_version v20261008175642 / synced=true`）。
+  - DHT22：驱动可用，当前读数 `(null)`（未接/接线/引脚），接好 **BCM11** 即出温湿度（代码已容错）。
+  - 排查噪音：开机时的 “completed socket interaction for boot stage config/final” 属 cloud-init/systemd 正常输出，非故障。
 
 ### 实现顺序
 1. 云端两接口 → 部署服务器 + 回写仓库；

@@ -93,6 +93,7 @@ def run_display(cfg: EdgeConfig) -> None:
         if screen is None:
             try:
                 pygame.display.init()
+                pygame.font.init()
                 flags = pygame.FULLSCREEN
                 if width and height:
                     screen = pygame.display.set_mode((width, height), flags)

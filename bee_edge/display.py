@@ -12,6 +12,7 @@ from datetime import datetime, timezone
 from typing import Optional, Tuple
 
 from .config import EdgeConfig
+from .netinfo import hostname, ipv4_addresses
 from .state import read_state
 
 log = logging.getLogger("bee_edge.display")
@@ -174,6 +175,12 @@ def run_display(cfg: EdgeConfig) -> None:
         stale = ts is not None and (datetime.now(timezone.utc) - ts).total_seconds() > cfg.normal_interval_s * 2.5
         info = f"更新：{rel}（{abs_t}）" + ("" if state.get("synced", False) else " · 本地")
         draw_text(screen, info, f_small, TONE["warn"] if stale else MUTED, center=(w // 2, int(h * 0.92)))
+
+        # 左上角显示主机名 + IP（方便手机连接）
+        ips = ipv4_addresses()
+        if ips:
+            draw_text(screen, f"{hostname()} · {ips[0]}", f_small, MUTED,
+                      topleft=(int(w * 0.02), int(h * 0.02)))
 
         pygame.display.flip()
         time.sleep(REFRESH_S)

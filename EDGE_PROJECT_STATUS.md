@@ -122,8 +122,12 @@ edge-device/
 │   ├── inference.py     # 本地 SVM 推理
 │   ├── model_store.py   # 加载/版本/sha/Ed25519验签/原子替换
 │   ├── server.py        # 预签名上传·推理上报·模型清单/状态·退避重试
+│   ├── setup.py         # 命令行配置向导
+│   ├── websetup.py      # 本地网页配置(手机填写)
+│   ├── netinfo.py       # 主机名/本机 IP
+│   ├── showip.py        # 全屏显示本机 IP
 │   ├── app.py           # 主循环 + 模式切换
-│   └── display.py       # pygame 全屏渲染(读 state)
+│   └── display.py       # pygame 全屏渲染(读 state，含主机名·IP)
 ├── main.py              # 入口(--mode edge|display)
 ├── config.example.toml
 ├── requirements.txt
@@ -164,8 +168,9 @@ edge-device/
 
 ### 已完成实现（2026-10-08）
 - **云端**（`app/api/v1/devices.py`）：`GET /{name}/model`、`GET /{name}/model-status`、`GET /me/presigned-url`（均 X-API-Key）；已部署服务器容器 + 回写仓库。
-- **边缘端**（`edge-device/`）：`bee_edge/`（config/state/sensors/audio/features/inference/model_store/server/setup/app/display）、`main.py`、`config.example.toml`、`requirements.txt`、`install.sh`、`bee-edge.service`、`bee-display.service`、`README.md`、`tests/test_offline.py`。
+- **边缘端**（`edge-device/`）：`bee_edge/`（config/state/sensors/audio/features/inference/model_store/server/setup/websetup/netinfo/showip/app/display）、`main.py`、`config.example.toml`、`requirements.txt`、`install.sh`、`bee-edge.service`、`bee-display.service`、`README.md`、`tests/test_offline.py`。
 - **设备密钥配置**：① 命令行向导 `main.py --mode setup`（可 `--key-file device_key.txt`）；② **本地网页配置** `main.py --mode websetup`（树莓派开小页面，手机浏览器填设备名+key，联网校验后写入，可选 `--setup-token` 口令；实测 GET/POST 通过）。也可直接编辑 `config.toml` 或用环境变量 `BEE_API_KEY`。
+- **本机 IP 展示**：`main.py --mode showip` 全屏显示主机名+IP+手机访问地址（无需 config）；正常状态屏左上角亦显示 `主机名 · IP`；`websetup` 启动时控制台打印可访问地址（`bee_edge/netinfo.py`）。
 - **离线自测通过**：60 维特征 `(60,)`；状态分级；state 原子读写；模型 sha256+Ed25519 验签与原子安装（拒绝坏签名）。
 
 ### 实现顺序

@@ -14,6 +14,7 @@ import re
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.parse import parse_qs, urlparse
 
+from .netinfo import ipv4_addresses
 from .server import AuthError, ServerClient, ServerError
 from .setup import DEFAULT_SERVER, _write_config
 
@@ -137,10 +138,17 @@ def run_websetup(config_path: str, host: str, port: int, token: str) -> int:
         return Handler
 
     server = ThreadingHTTPServer((host, port), make_handler())
+    qs = f"?t={token}" if token else ""
     print("== 网页配置模式 ==")
-    print(f"监听：http://{host}:{port}/" + (f"  （口令 --setup-token {token}）" if token else ""))
     print(f"配置文件：{os.path.abspath(config_path)}")
-    print("在同一局域网的手机/电脑浏览器打开上面的地址填写即可。Ctrl+C 退出。")
+    print(f"本机主机名：{__import__('socket').gethostname()}")
+    ips = ipv4_addresses()
+    if ips:
+        for ip in ips:
+            print(f"  手机/电脑浏览器打开：http://{ip}:{port}/{qs}")
+    else:
+        print(f"  浏览器打开：http://<树莓派IP>:{port}/{qs}")
+    print("（同一局域网内；Ctrl+C 退出）")
     try:
         server.serve_forever()
     except KeyboardInterrupt:

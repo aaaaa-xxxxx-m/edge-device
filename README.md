@@ -18,8 +18,12 @@ edge-device/
 │   ├── inference.py     本地 SVM 推理 + 状态分级
 │   ├── model_store.py   模型验签(Ed25519)/原子替换/加载
 │   ├── server.py        云端接口客户端（预签名/上报/清单/状态）
+│   ├── setup.py         命令行配置向导（校验并写入密钥）
+│   ├── websetup.py      本地网页配置（手机浏览器填写）
+│   ├── netinfo.py       主机名 / 本机 IP
+│   ├── showip.py        全屏显示本机 IP
 │   ├── app.py           采集主循环 + 模式切换
-│   └── display.py       pygame 全屏状态显示
+│   └── display.py       pygame 全屏状态显示（含主机名·IP）
 ├── main.py              入口（--mode edge|display）
 ├── config.example.toml
 ├── requirements.txt
@@ -90,6 +94,17 @@ python main.py --mode websetup [--host 0.0.0.0] [--port 8080] [--setup-token 123
 
 然后手机/电脑打开 `http://<树莓派IP>:8080/`（若设了口令：`http://<ip>:8080/?t=123456`），
 填「服务器地址 / 设备名 / API Key」→「保存并校验」→ 校验通过即写入 `config.toml`。
+
+**显示本机 IP（方便手机连接）**：
+
+```sh
+python main.py --mode showip [--port 8080]
+```
+
+全屏显示「主机名 + 本机 IP + 手机访问地址」，方便现场一眼看到。此外：
+
+- `websetup` 启动时会在控制台打印所有可访问地址；
+- **正常状态屏左上角也显示 `主机名 · IP`**。
 
 ## 配置（`config.toml`）
 

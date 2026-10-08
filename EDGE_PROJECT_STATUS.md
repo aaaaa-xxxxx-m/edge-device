@@ -163,7 +163,7 @@ edge-device/
 | 显示服务（pygame 中文全屏 + state.json） | ✅ 完成（本地） |
 | 本地离线自测（特征=60 维、上传/验签、state→渲染） | ✅ 通过（`tests/test_offline.py`） |
 | 边缘端 Git 仓库（`edge-device`，私有）+ README | ✅ 已完成并推送（`github.com/aaaaa-xxxxx-m/edge-device`） |
-| 上机联调（树莓派 + DHT22 + 麦克风 + HDMI 屏） | ⬜ 待做 |
+| 上机联调（树莓派 + DHT22 + 麦克风 + HDMI 屏） | 🟡 进行中：采集+上传已跑通；待接 DHT/HDMI、触发训练 |
 | 将「部署/使用/介绍」文档同步到文档存档目录 | ⬜ 待做 |
 
 ### 已完成实现（2026-10-08）
@@ -172,6 +172,18 @@ edge-device/
 - **设备密钥配置**：① 命令行向导 `main.py --mode setup`（可 `--key-file device_key.txt`）；② **本地网页配置** `main.py --mode websetup`（树莓派开小页面，手机浏览器填设备名+key，联网校验后写入，可选 `--setup-token` 口令；实测 GET/POST 通过）。也可直接编辑 `config.toml` 或用环境变量 `BEE_API_KEY`。
 - **本机 IP 展示**：`main.py --mode showip` 全屏显示主机名+IP+手机访问地址（无需 config）；正常状态屏左上角亦显示 `主机名 · IP`；`websetup` 启动时控制台打印可访问地址（`bee_edge/netinfo.py`）。
 - **离线自测通过**：60 维特征 `(60,)`；状态分级；state 原子读写；模型 sha256+Ed25519 验签与原子安装（拒绝坏签名）。
+
+### 实机部署联调（2026-10-08/09，Raspberry Pi Zero WH）
+- **设备**：主机 `beehive` / `192.168.82.165`（WiFi）；Raspbian 13 (trixie) armv6l；Python 3.13。默认启动已改 **multi-user.target（控制台）**（供 pygame kmsdrm）。
+- **访问**：SSH 已开；已注入本机公钥（免密登录）。密码被 cloud-init（重跑）改为 `BeeHive2026`（可自行 `passwd` 改回）；`sudo` 免密。
+- **安装**：代码 → `/opt/bee-edge`；venv `--system-site-packages`；apt 装 `python3-numpy/scipy/sklearn/joblib/requests/cryptography/pygame`、`gcc`、`fonts-wqy-zenhei`；pip 装 `python-speech-features` 与 `Adafruit_DHT`（**从源码重编译**，修复 piwheels wheel 缺失 `Raspberry_Pi_2_Driver` 的问题）；apt 源改**清华 TUNA**（原镜像 18kB/s）。
+- **配置**：`/opt/bee-edge/config.toml`（`device_name=hive001` + 真实 key；`alsa_device=plughw:1,0` 对应 USB 麦克风 card1）。
+- **服务**：`bee-edge`、`bee-display` 均已安装并 **enable**；`bee-edge` 运行正常（一轮 ≈19–20s CPU + 休眠 90s；启动导入 scipy/sklearn ≈25s 一次性）。
+- **验证**：采集→特征→预签名上传音频+特征成功（服务器 hive001 占用 `audio 10→12`、`features 0→2`）；无模型时状态「等待模型」。同时修复云端 `GET /models/public-key` 被 `/{version}` 遮蔽的 404（提交 `0ccfe5e7`）。
+- **待办**：
+  - DHT22：驱动已可用，当前读数 `(null)`（未接/接线/引脚），接好 GPIO11 即出温湿度（已容错不阻塞）。
+  - 显示：需接 HDMI 并重启（进控制台）后 `bee-display` 才有画面；左上角显示 `主机名·IP`。
+  - 模型：需在网页端触发一次「更新检测模型」→ 设备转采集模式（30s）→ 攒满 600 → 云端出模型 → 设备自动拉取验签替换。
 
 ### 实现顺序
 1. 云端两接口 → 部署服务器 + 回写仓库；

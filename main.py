@@ -23,19 +23,28 @@ def _setup_logging(level: str) -> None:
 def main() -> int:
     parser = argparse.ArgumentParser(description="智能蜂箱 · 边缘设备")
     parser.add_argument("--config", default="config.toml", help="配置文件路径")
-    parser.add_argument("--mode", choices=["setup", "edge", "display"], default="edge")
+    parser.add_argument("--mode", choices=["setup", "websetup", "edge", "display"], default="edge")
     # setup 参数
     parser.add_argument("--device-name", dest="device_name", default=None)
     parser.add_argument("--api-key", dest="api_key", default=None)
     parser.add_argument("--server", default=None)
     parser.add_argument("--key-file", dest="key_file", default=None)
     parser.add_argument("--force", action="store_true")
+    # websetup 参数
+    parser.add_argument("--host", default="0.0.0.0")
+    parser.add_argument("--port", type=int, default=8080)
+    parser.add_argument("--setup-token", dest="setup_token", default="")
     args = parser.parse_args()
 
     if args.mode == "setup":
         from bee_edge.setup import run_setup
 
         return run_setup(args.config, args)
+
+    if args.mode == "websetup":
+        from bee_edge.websetup import run_websetup
+
+        return run_websetup(args.config, args.host, args.port, args.setup_token)
 
     from bee_edge.config import load_config
 

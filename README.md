@@ -80,6 +80,17 @@ cp config.example.toml config.toml
 
 > 也可不用向导，直接编辑 `config.toml`，或用环境变量 `BEE_API_KEY` 提供密钥。
 
+### 手机网页配置（现场免 SSH，可选）
+
+在树莓派上启动一个仅局域网可访问的小网页，用手机浏览器填写设备名与密钥：
+
+```sh
+python main.py --mode websetup [--host 0.0.0.0] [--port 8080] [--setup-token 123456]
+```
+
+然后手机/电脑打开 `http://<树莓派IP>:8080/`（若设了口令：`http://<ip>:8080/?t=123456`），
+填「服务器地址 / 设备名 / API Key」→「保存并校验」→ 校验通过即写入 `config.toml`。
+
 ## 配置（`config.toml`）
 
 关键项：

@@ -1,0 +1,15 @@
+[Unit]
+Description=Bee Edge collector (collect / infer / upload)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/bee-edge
+ExecStart=/opt/bee-edge/.venv/bin/python /opt/bee-edge/main.py --config /opt/bee-edge/config.toml --mode edge
+Restart=always
+RestartSec=5
+User=root
+
+[Install]
+WantedBy=multi-user.target

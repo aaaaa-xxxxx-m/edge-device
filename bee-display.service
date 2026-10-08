@@ -1,0 +1,17 @@
+[Unit]
+Description=Bee Edge HDMI status display (pygame)
+After=bee-edge.service
+Wants=bee-edge.service
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/bee-edge
+# 无 X 桌面时用 SDL 的 DRM/KMS 驱动直出 HDMI；若设备为旧版 fbdev 可改 fbcon
+Environment=SDL_VIDEODRIVER=kmsdrm
+ExecStart=/opt/bee-edge/.venv/bin/python /opt/bee-edge/main.py --config /opt/bee-edge/config.toml --mode display
+Restart=always
+RestartSec=5
+User=root
+
+[Install]
+WantedBy=multi-user.target

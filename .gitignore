@@ -1,0 +1,9 @@
+# 本地运行产物与密钥，不入版本库
+config.toml
+device_key.txt
+*.pem
+state.json
+models/
+__pycache__/
+*.pyc
+.venv/

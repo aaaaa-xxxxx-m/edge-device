@@ -1,0 +1,125 @@
+# 智能蜂箱 · 边缘设备系统（edge-device）
+
+运行于 **树莓派 Zero WH**：采集蜂箱温湿度与音频 → 本地提取 60 维特征 → 本地 SVM 推理失王概率 →
+经预签名直传 MinIO（音频/特征）并上报云端 → 自动拉取校验新模型 → HDMI 屏离线显示蜂箱情况。
+
+> 详细设计与决策见同目录 `EDGE_PROJECT_STATUS.md`；硬件见 `DEVICE_STATUS.md`。
+
+## 目录
+
+```
+edge-device/
+├── bee_edge/
+│   ├── config.py        配置(TOML)加载
+│   ├── state.py         本地状态原子读写
+│   ├── sensors.py       DHT22 温湿度
+│   ├── audio.py         arecord 录音 + WAV 解码
+│   ├── features.py      60 维特征（与云端逐位一致）
+│   ├── inference.py     本地 SVM 推理 + 状态分级
+│   ├── model_store.py   模型验签(Ed25519)/原子替换/加载
+│   ├── server.py        云端接口客户端（预签名/上报/清单/状态）
+│   ├── app.py           采集主循环 + 模式切换
+│   └── display.py       pygame 全屏状态显示
+├── main.py              入口（--mode edge|display）
+├── config.example.toml
+├── requirements.txt
+├── install.sh
+├── bee-edge.service
+├── bee-display.service
+└── README.md
+```
+
+## 依赖
+
+- 系统：`python3-venv python3-dev alsa-utils fonts-noto-cjk python3-pygame`
+- Python（piwheels 优先）：`numpy scipy scikit-learn joblib python-speech-features requests cryptography`
+- 硬件库：`Adafruit_DHT`（DHT22）
+
+## 安装
+
+```sh
+# 在树莓派上，于本目录执行
+sudo sh install.sh
+```
+
+或手动：
+
+```sh
+sudo mkdir -p /opt/bee-edge && sudo cp -r . /opt/bee-edge
+cd /opt/bee-edge
+python3 -m venv .venv && . .venv/bin/activate
+pip install -r requirements.txt
+pip install Adafruit_DHT          # 或使用 apt 的 DHT 包
+cp config.example.toml config.toml
+```
+
+## 配置（`config.toml`）
+
+关键项：
+
+| 键 | 说明 |
+|----|------|
+| `device_name` | 设备名（需先在云端管理端注册） |
+| `api_key` | 设备 API Key（注册时返回；也可用环境变量 `BEE_API_KEY`） |
+| `server_base_url` | 云端地址，如 `http://8.156.79.6` |
+| `normal_interval_s` | 正常周期，默认 **90**（须 < 5 分钟，否则被判离线） |
+| `collect_interval_s` | 采集模式周期，默认 **30**（有训练任务时） |
+| `sample_rate` | **16000**，与云端特征口径一致，勿改 |
+| `audio_seconds` | 每轮录音时长，默认 6 |
+| `dht_pin` / `dht_sensor` | DHT22 数据脚（BCM）/ 型号 |
+| `alsa_device` | USB 麦克风（用 `arecord -l` 查得） |
+| `display_width/height` | 0 = 自适应 HDMI 分辨率 |
+| `font_path` | 留空自动查找 CJK 字体 |
+
+> 首次接入：在云端管理端注册设备 → 复制 API Key → 写入 `config.toml`；
+> 待用户在设备详情页触发一次「更新检测模型」→ 设备采集样本 → 云端出首个模型 → 设备自动拉取后开始推理。
+
+## 运行
+
+```sh
+# 采集（含推理与上传）
+/opt/bee-edge/.venv/bin/python main.py --config /opt/bee-edge/config.toml --mode edge
+
+# 显示（读 state.json，全屏 HDMI）
+SDL_VIDEODRIVER=kmsdrm /opt/bee-edge/.venv/bin/python main.py --config /opt/bee-edge/config.toml --mode display
+```
+
+## 开机自启（systemd）
+
+```sh
+sudo systemctl enable --now bee-edge bee-display
+journalctl -u bee-edge -f          # 查看采集日志
+journalctl -u bee-display -f       # 查看显示日志
+```
+
+- **建议 `raspi-config` → Boot → Console Autologin（无桌面）**，以支持 pygame 的 `kmsdrm` 直出并节省内存。
+- 若显示初始化失败（无 HDMI / 驱动不符），`bee-display` 会每 5s 重试，不影响采集。
+- SDL 驱动可切换：新版用 `kmsdrm`；旧版 fbdev 可试 `SDL_VIDEODRIVER=fbcon`。
+
+## 与云端交互（设备端，`X-API-Key`）
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| GET | `/api/v1/devices/me/presigned-url?kind=audio\|feature&filename=…` | 预签名上传 |
+| POST | `/api/v1/devices/inference` | 上报推理+环境指标 |
+| GET | `/api/v1/devices/{name}/model` | 模型清单（含预签名下载链接） |
+| GET | `/api/v1/devices/{name}/model-status` | 训练状态（切换采集模式） |
+| GET | `/api/v1/models/public-key` | 模型验签公钥 |
+
+## 数据流
+
+1. 读 DHT22 → 录 6s/16k WAV → 60 维特征
+2. 本地 SVM 推理 → 失王概率/标签/置信度
+3. 预签名直传音频、特征到 MinIO → `POST /inference`
+4. 写 `state.json`（供显示服务）
+5. 查模型清单：版本变化 → 下载 → **sha256 + Ed25519 验签** → 原子替换 → 重载
+6. 查训练状态：有任务 → 采集模式（30s），否则正常（90s）
+
+## 故障排查
+
+- **录音失败**：`arecord -l` 查设备号，设置 `alsa_device`（如 `plughw:1,0`）。
+- **温湿度为空**：确认 DHT22 接线与 `dht_pin`；`Adafruit_DHT` 是否安装。
+- **中文显示方块**：安装 `fonts-noto-cjk` 或在 `config.toml` 指定 `font_path`。
+- **显示无输出**：确认已进控制台（无桌面）且用户对 `/dev/dri` 有权限；尝试 `SDL_VIDEODRIVER=fbcon`。
+- **401/403**：API Key 失效或设备被删除/注销；在云端重置密钥后更新 `config.toml`。
+- **一直“等待模型”**：尚无该设备的模型；需在云端触发一次训练，待模型生成后自动拉取。

@@ -164,7 +164,8 @@ edge-device/
 
 ### 已完成实现（2026-10-08）
 - **云端**（`app/api/v1/devices.py`）：`GET /{name}/model`、`GET /{name}/model-status`、`GET /me/presigned-url`（均 X-API-Key）；已部署服务器容器 + 回写仓库。
-- **边缘端**（`edge-device/`）：`bee_edge/`（config/state/sensors/audio/features/inference/model_store/server/app/display）、`main.py`、`config.example.toml`、`requirements.txt`、`install.sh`、`bee-edge.service`、`bee-display.service`、`README.md`、`tests/test_offline.py`。
+- **边缘端**（`edge-device/`）：`bee_edge/`（config/state/sensors/audio/features/inference/model_store/server/setup/app/display）、`main.py`、`config.example.toml`、`requirements.txt`、`install.sh`、`bee-edge.service`、`bee-display.service`、`README.md`、`tests/test_offline.py`。
+- **设备密钥配置**：`main.py --mode setup` 向导 —— 云端注册得到 API Key 后，在设备上运行向导（可 `--key-file device_key.txt`）联网校验并写入 `config.toml`；实测校验通过并写配置。也可直接编辑 `config.toml` 或用环境变量 `BEE_API_KEY`。
 - **离线自测通过**：60 维特征 `(60,)`；状态分级；state 原子读写；模型 sha256+Ed25519 验签与原子安装（拒绝坏签名）。
 
 ### 实现顺序

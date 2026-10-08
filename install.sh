@@ -31,7 +31,9 @@ systemctl daemon-reload
 
 echo ""
 echo "安装完成。请："
-echo "  1) 编辑 $APP_DIR/config.toml 填写 device_name 与 api_key"
+echo "  1) 用配置向导写入云端下发的密钥："
+echo "     cd $APP_DIR && ./.venv/bin/python main.py --mode setup"
+echo "     （或手动编辑 $APP_DIR/config.toml 的 device_name / api_key）"
 echo "  2) 用 \`arecord -l\` 确认麦克风设备并设置 alsa_device"
 echo "  3) raspi-config 选择 'Console Autologin'（无桌面），以支持 pygame kmsdrm"
 echo "  4) 启用服务：sudo systemctl enable --now bee-edge bee-display"

@@ -53,6 +53,33 @@ pip install Adafruit_DHT          # 或使用 apt 的 DHT 包
 cp config.example.toml config.toml
 ```
 
+## 首次接入 / 配置密钥（向导，推荐）
+
+设备需要一个**云端下发的 API Key** 才能与服务器交互。密钥在**云端注册设备时生成、仅显示一次**，
+因此需要在设备上把它写入配置。流程：
+
+1. **在云端注册设备**：登录网页端（主页「新增设备」或管理端）→ 注册设备名（如 `hive001`）→
+   **复制返回的 API Key**（只显示一次）。
+2. **在设备上运行配置向导**（会联网校验密钥）：
+
+   ```sh
+   # 交互式（在树莓派接键盘/SSH）
+   python main.py --mode setup
+
+   # 或直接传入
+   python main.py --mode setup --device-name hive001 --api-key bee_xxx --server http://8.156.79.6
+
+   # 或从一个 key 文件读取（格式：device_name: xxx / key: bee_xxx）
+   python main.py --mode setup --key-file device_key.txt
+   ```
+
+   向导会调用 `GET /devices/{name}/model-status`（X-API-Key）**校验密钥**，
+   通过后写入 `config.toml`；校验失败会提示（密钥无效 / 设备不存在 / 名称不匹配）。
+
+3. 之后按需 `arecord -l` 设置 `alsa_device`，再启动服务（见下文）。
+
+> 也可不用向导，直接编辑 `config.toml`，或用环境变量 `BEE_API_KEY` 提供密钥。
+
 ## 配置（`config.toml`）
 
 关键项：

@@ -158,6 +158,7 @@ edge-device/
 | 边缘系统代码（`bee_edge/*`、入口、配置、systemd、README） | ✅ 完成（本地） |
 | 显示服务（pygame 中文全屏 + state.json） | ✅ 完成（本地） |
 | 本地离线自测（特征=60 维、上传/验签、state→渲染） | ✅ 通过（`tests/test_offline.py`） |
+| 边缘端 Git 仓库（`edge-device`，私有）+ README | ✅ 已完成并推送（`github.com/aaaaa-xxxxx-m/edge-device`） |
 | 上机联调（树莓派 + DHT22 + 麦克风 + HDMI 屏） | ⬜ 待做 |
 | 将「部署/使用/介绍」文档同步到文档存档目录 | ⬜ 待做 |
 
@@ -175,6 +176,7 @@ edge-device/
 
 ## 九、参考文件
 
+- 边缘端仓库：**https://github.com/aaaaa-xxxxx-m/edge-device**（私有，`main`）
 - 旧边缘程序：`C:\Users\xx\OneDrive\Desktop\sys.py`（48kHz/62 维/旧 `api1` 接口，仅作参考）
 - 硬件说明：`edge-device/DEVICE_STATUS.md`
 - 云端特征实现（对齐基准）：`...\ai-lab\hive_system\code\github_mirror\app\services\feature_extract.py`

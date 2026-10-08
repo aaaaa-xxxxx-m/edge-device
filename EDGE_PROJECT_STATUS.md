@@ -183,7 +183,8 @@ edge-device/
 - **修复 / 进展（2026-10-09）**：
   - 显示：`bee-display` 曾因**缺少 `pygame.font.init()`** 崩溃重启（屏幕停在控制台登录提示）；修复后稳定运行于 HDMI **1280×800**（顶部设备名、左上角 `主机名·IP`）。
   - 模型：以桌面 `queenbee`（600 正样本）**模拟训练**出 `v20261008175642`；设备开机后**已自动拉取 → Ed25519 验签 → 原子替换**，并开始推理上报（state：`概率 0.73 / 显著波动 / model_version v20261008175642 / synced=true`）。
-  - DHT22：驱动可用，当前读数 `(null)`（未接/接线/引脚），接好 **BCM11** 即出温湿度（代码已容错）。
+  - DHT22：已接在 **BCM17**（wiringPi 0 / 物理 11），读数正常（≈23.5℃ / 58%）；`dht_pin=17`。读取已容错。
+  - 备注：设备端 scikit-learn 为 1.4.2（apt），云端训练为 1.3.2 → 反序列化时提示 `InconsistentVersionWarning`；SVM/Scaler 可正常 unpickle 与推理，暂可接受（如需消除，需统一两端 sklearn 版本后重训）。
   - 排查噪音：开机时的 “completed socket interaction for boot stage config/final” 属 cloud-init/systemd 正常输出，非故障。
 
 ### 实现顺序

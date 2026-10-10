@@ -1,7 +1,8 @@
 # 智能蜂箱 · 边缘设备系统（edge-device）
 
 运行于 **树莓派 Zero WH**：采集蜂箱温湿度与音频 → 本地提取 60 维特征 → 本地 SVM 推理失王概率 →
-经预签名直传 MinIO（音频/特征）并上报云端 → 自动拉取校验新模型 → HDMI 屏离线显示蜂箱情况。
+经预签名直传对象存储（音频/特征，`https://s3.hivesystem.top`）并上报云端 → 自动拉取校验新模型 →
+HDMI 屏离线显示蜂箱情况（训练采集阶段提示“判断模型正在更新”）。
 
 ## 目录
 
@@ -21,8 +22,8 @@ edge-device/
 │   ├── netinfo.py       主机名 / 本机 IP
 │   ├── showip.py        全屏显示本机 IP
 │   ├── app.py           采集主循环 + 模式切换
-│   └── display.py       pygame 全屏状态显示（含主机名·IP）
-├── main.py              入口（--mode edge|display）
+│   └── display.py       pygame 全屏仪表盘（失王概率环 + 温湿度 + 走秒时钟 + 主机名·IP）
+├── main.py              入口（--mode setup|websetup|showip|edge|display）
 ├── config.example.toml
 ├── requirements.txt
 ├── install.sh
@@ -145,7 +146,7 @@ journalctl -u bee-display -f       # 查看显示日志
 
 - **建议 `raspi-config` → Boot → Console Autologin（无桌面）**，以支持 pygame 的 `kmsdrm` 直出并节省内存。
 - 若显示初始化失败（无 HDMI / 驱动不符），`bee-display` 会每 5s 重试，不影响采集。
-- SDL 驱动可切换：新版用 `kmsdrm`；旧版 fbdev 可试 `SDL_VIDEODRIVER=fbcon`。
+- 显示使用 SDL 的 `kmsdrm` 后端（需控制台、无桌面环境）。
 
 ## 与云端交互（设备端，`X-API-Key`）
 
@@ -171,6 +172,6 @@ journalctl -u bee-display -f       # 查看显示日志
 - **录音失败**：`arecord -l` 查设备号，设置 `alsa_device`（如 `plughw:1,0`）。
 - **温湿度为空**：确认 DHT22 接线与 `dht_pin`；`Adafruit_DHT` 是否安装。
 - **中文显示方块**：安装 `fonts-noto-cjk` 或在 `config.toml` 指定 `font_path`。
-- **显示无输出**：确认已进控制台（无桌面）且用户对 `/dev/dri` 有权限；尝试 `SDL_VIDEODRIVER=fbcon`。
+- **显示无输出**：确认已进入控制台（无桌面）模式，且对 `/dev/dri` 有权限（`kmsdrm` 需要）。
 - **401/403**：API Key 失效或设备被删除/注销；在云端重置密钥后更新 `config.toml`。
 - **一直“等待模型”**：尚无该设备的模型；需在云端触发一次训练，待模型生成后自动拉取。

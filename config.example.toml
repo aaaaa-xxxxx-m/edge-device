@@ -4,7 +4,7 @@
 # —— 设备（在云端管理端注册设备后获得 API Key）——
 device_name = "hive001"
 api_key = "bee_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-server_base_url = "http://8.156.79.6"
+server_base_url = "http://<server-ip>"
 
 # —— 采样与模式 ——
 normal_interval_s = 90    # 正常模式周期（保证在线，< 5 分钟）

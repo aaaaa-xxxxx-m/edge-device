@@ -4,7 +4,7 @@
     python main.py --mode setup
 
 用法（非交互 / 脚本）：
-    python main.py --mode setup --device-name hive001 --api-key bee_xxx --server http://8.156.79.6
+    python main.py --mode setup --device-name hive001 --api-key bee_xxx --server http://<server-ip>
 
 也可从文件读取（形如 device_key.txt）：
     device_name: hive001
@@ -19,7 +19,7 @@ from typing import Optional
 
 from .server import AuthError, ServerClient, ServerError
 
-DEFAULT_SERVER = "http://8.156.79.6"
+DEFAULT_SERVER = "http://<server-ip>"
 
 TEMPLATE = '''# 智能蜂箱 · 边缘设备配置（由 setup 生成）
 device_name = "{device_name}"

@@ -70,7 +70,7 @@ cp config.example.toml config.toml
    python main.py --mode setup
 
    # 或直接传入
-   python main.py --mode setup --device-name hive001 --api-key bee_xxx --server http://8.156.79.6
+   python main.py --mode setup --device-name hive001 --api-key bee_xxx --server http://<server-ip>
 
    # 或从一个 key 文件读取（格式：device_name: xxx / key: bee_xxx）
    python main.py --mode setup --key-file device_key.txt
@@ -113,7 +113,7 @@ python main.py --mode showip [--port 8080]
 |----|------|
 | `device_name` | 设备名（需先在云端管理端注册） |
 | `api_key` | 设备 API Key（注册时返回；也可用环境变量 `BEE_API_KEY`） |
-| `server_base_url` | 云端地址，如 `http://8.156.79.6` |
+| `server_base_url` | 云端地址，如 `http://<server-ip>`（或已部署域名） |
 | `normal_interval_s` | 正常周期，默认 **90**（须 < 5 分钟，否则被判离线） |
 | `collect_interval_s` | 采集模式周期，默认 **30**（有训练任务时） |
 | `sample_rate` | **16000**，与云端特征口径一致，勿改 |

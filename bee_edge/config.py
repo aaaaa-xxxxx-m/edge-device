@@ -17,7 +17,7 @@ except ModuleNotFoundError:  # pragma: no cover
 class EdgeConfig:
     device_name: str
     api_key: str
-    server_base_url: str = "http://8.156.79.6"
+    server_base_url: str = "http://<server-ip>"
     # 采集
     normal_interval_s: float = 90.0
     collect_interval_s: float = 30.0
@@ -65,7 +65,7 @@ def load_config(path: str) -> EdgeConfig:
     return EdgeConfig(
         device_name=str(device_name),
         api_key=str(api_key),
-        server_base_url=str(g("server_base_url", "http://8.156.79.6")),
+        server_base_url=str(g("server_base_url", "http://<server-ip>")),
         normal_interval_s=float(g("normal_interval_s", 90.0)),
         collect_interval_s=float(g("collect_interval_s", 30.0)),
         sample_rate=int(g("sample_rate", 16000)),

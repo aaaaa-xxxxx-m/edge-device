@@ -43,6 +43,7 @@ class EdgeApp:
         self.store = ModelStore(cfg.model_dir, cfg.public_key_file)
         self.model: Optional[LocalModel] = None
         self.auth_failed = False
+        self.collecting = False  # 是否处于训练采集模式（云端有进行中的模型更新）
 
     # ---------- 模型 ----------
     def _fetch_url(self, url: str) -> bytes:
@@ -177,6 +178,7 @@ class EdgeApp:
             "model_version": version,
             "updated_at": _utc_iso(),
             "synced": synced,
+            "updating": self.collecting,
             "cycle_ms": int((time.time() - t_start) * 1000),
         })
 
@@ -197,6 +199,19 @@ class EdgeApp:
 
         while True:
             interval = cfg.normal_interval_s
+
+            # 训练状态 → 采集模式判定（先于本轮采集，供状态文件/HDMI 显示使用）
+            try:
+                st = self.client.get_model_status(cfg.device_name)
+                self.collecting = bool(st.get("has_active"))
+                if self.collecting:
+                    interval = cfg.collect_interval_s
+                    log.info("采集模式：feature %s/%s", st.get("feature_count"), st.get("required"))
+            except AuthError:
+                self.auth_failed = True
+            except Exception as e:  # noqa: BLE001
+                log.warning("查询训练状态失败：%s", e)
+
             try:
                 self._cycle()
             except AuthError as e:
@@ -213,17 +228,6 @@ class EdgeApp:
                 log.error("鉴权失败：%s", e)
             except Exception as e:  # noqa: BLE001
                 log.warning("模型检查失败：%s", e)
-
-            # 决定下一轮间隔（有训练任务 → 采集模式）
-            try:
-                st = self.client.get_model_status(cfg.device_name)
-                if st.get("has_active"):
-                    interval = cfg.collect_interval_s
-                    log.info("采集模式：feature %s/%s", st.get("feature_count"), st.get("required"))
-            except AuthError:
-                self.auth_failed = True
-            except Exception as e:  # noqa: BLE001
-                log.warning("查询训练状态失败：%s", e)
 
             if self.auth_failed:
                 interval = max(interval, 300.0)  # 鉴权失败时放慢重试
